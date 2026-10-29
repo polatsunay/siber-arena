@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Siber Arena</title>
+<meta name="description" content="Dijital güvenlik bilgi yarışması: takımlar telefondan yarışır, skor tahtada canlı.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--bg:#1b1446;--bg2:#2a1f6b;--card:#fff;--ink:#1d1b33;--mut:#9b95c9;--y:#ffd23f;--c0:#e8384f;--c1:#2f7de1;--c2:#e9a21b;--c3:#22a565;--ok:#3ddc97}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:radial-gradient(1200px 700px at 20% -10%,#4b2fb8 0,transparent 60%),radial-gradient(900px 600px at 110% 110%,#c2185b55 0,transparent 60%),var(--bg);color:#fff;font-family:Nunito,system-ui,sans-serif;min-height:100vh}
+button{font:inherit;cursor:pointer;border:0}
+button:disabled{opacity:.45;cursor:not-allowed}
+h1,h2,h3{font-family:Fredoka,Nunito,sans-serif;margin:.2em 0}
+#app{min-height:100vh;padding:24px 16px;max-width:1280px;margin:0 auto}
+.muted{color:var(--mut)}
+.lbl{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin:16px 0 6px;font-weight:800}
+.inp{width:100%;padding:12px 14px;border-radius:12px;border:2px solid #4a3f99;background:#120d33;color:#fff;font:inherit;font-size:1rem}
+.inp:focus{outline:none;border-color:var(--y)}
+select.inp{appearance:auto}
+.go{display:block;width:100%;margin-top:22px;padding:16px;border-radius:16px;background:var(--y);color:#2a1f00;font-family:Fredoka;font-size:1.3rem;font-weight:700;box-shadow:0 6px 0 #b8901c;transition:transform .1s}
+.go:active{transform:translateY(4px);box-shadow:0 2px 0 #b8901c}
+.go.sm{display:inline-block;width:auto;font-size:1rem;padding:10px 18px;margin:0}
+.sm{padding:9px 14px;border-radius:10px;background:#3a2f86;color:#fff;font-weight:700}
+.sm:hover{background:#4a3fa6}
+.sm.danger{background:#7a1f35}
+.back{background:none;color:var(--mut);padding:6px 0;font-weight:700}
+.err{background:#5c1530;border:1px solid #e8384f;padding:10px 14px;border-radius:12px;margin:10px 0}
+.okc{background:#123d2e;border:1px solid var(--ok);padding:10px 14px;border-radius:12px;margin:10px 0}
+.wait{color:var(--y);margin:10px 0}
+.row2{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+/* home */
+.home{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.hero{text-align:center;margin:3vh 0 28px}
+.logo{font-size:64px;filter:drop-shadow(0 8px 20px #000a);animation:bob 3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px)}}
+.hero h1{font-size:clamp(2.6rem,8vw,5rem);letter-spacing:.02em;line-height:1}
+.hero h1 span{color:var(--y)}
+.hero p{max-width:560px;margin:10px auto;color:#cfcaf2}
+.menu{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%;max-width:960px}
+.big{border-radius:22px;padding:26px 18px;color:#fff;text-align:left;display:flex;flex-direction:column;gap:6px;box-shadow:0 8px 0 #0005;transition:transform .15s}
+.big:hover{transform:translateY(-4px)}
+.big span{font-size:40px}.big b{font-family:Fredoka;font-size:1.5rem}.big small{opacity:.85}
+.b1{background:linear-gradient(135deg,#e8384f,#b0174a)}.b2{background:linear-gradient(135deg,#2f7de1,#1b4fb0)}.b3{background:linear-gradient(135deg,#22a565,#127547)}
+.foot{margin-top:30px;color:var(--mut);font-size:.9rem;text-align:center}.foot a{color:var(--y)}
+/* panels */
+.panel{max-width:860px;margin:0 auto;background:#ffffff0d;border:1px solid #ffffff1a;border-radius:24px;padding:22px 24px 26px}
+.panel.narrow{max-width:460px}.panel.wide{max-width:1180px}
+.lvls{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.lvls button,.modes button{background:#120d33;border:2px solid #3a2f86;border-radius:16px;color:#fff;padding:14px;text-align:left;display:flex;flex-direction:column;gap:3px}
+.lvls button span{font-size:28px}.lvls button b{font-family:Fredoka;font-size:1.1rem}.lvls button small,.modes small{color:var(--mut);font-size:.8rem}
+.lvls button.on,.modes button.on{border-color:var(--y);background:#2f2470;box-shadow:0 0 0 3px #ffd23f33}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:auto auto 1fr;gap:20px;align-items:end}
+.chips{display:flex;gap:6px}.chips button{min-width:52px;padding:11px 12px;border-radius:12px;background:#120d33;border:2px solid #3a2f86;color:#fff;font-weight:800}
+.chips button.on{border-color:var(--y);background:#2f2470}
+/* lobby */
+.lob{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:28px;align-items:start}
+.lob-l{background:#fff;color:var(--ink);border-radius:24px;padding:22px;text-align:center}
+.lob-l .lbl{color:#6b6597}
+.lob-l .okc{background:#e3f8ee;color:#0d5c3a}.lob-l .err{background:#fde7ec;color:#7a1f35}.lob-l .wait{color:#8a6a00}
+.url{font-weight:800;font-size:1.1rem;word-break:break-all}
+.code{font-family:Fredoka;font-size:4.2rem;letter-spacing:.12em;color:#2a1f6b;line-height:1.1}
+.qr{display:flex;justify-content:center;margin:14px 0}.qr img,.qr canvas{border-radius:8px}
+.lob-r h2{font-size:1.8rem}
+.teams{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 10px;min-height:60px}
+.tm{background:#ffffff1a;border-radius:999px;padding:10px 16px;font-weight:800;font-size:1.1rem;animation:pop .35s ease}
+.tm .x{background:none;color:#ff9db0;margin-left:4px}
+@keyframes pop{0%{transform:scale(.4);opacity:0}80%{transform:scale(1.08)}}
+.addt{display:flex;gap:8px;margin-top:10px}
+/* game */
+.qhead{display:flex;justify-content:space-between;gap:12px;font-weight:800;flex-wrap:wrap}
+.qno{background:var(--y);color:#2a1f00;padding:6px 14px;border-radius:999px}
+.code-s{color:var(--mut)}
+.tbar{height:10px;background:#ffffff1a;border-radius:999px;margin:12px 0 18px;overflow:hidden}
+.tbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--ok),var(--y),var(--c0));transition:width .25s linear}
+.qbody{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:28px;align-items:start}
+.qside{min-width:0}
+.qq{font-size:clamp(1.4rem,2.6vw,2.1rem);margin-bottom:16px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{position:relative;border-radius:16px;padding:18px 18px 18px 58px;font-weight:800;font-size:1.15rem;min-height:84px;display:flex;align-items:center;box-shadow:0 5px 0 #0004;transition:opacity .3s,transform .3s}
+.opt .sh,.cop .sh{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:1.5rem;opacity:.9}
+.c0{background:var(--c0)}.c1{background:var(--c1)}.c2{background:var(--c2)}.c3{background:var(--c3)}
+.opt.dim{opacity:.28}.opt.right{transform:scale(1.03);box-shadow:0 0 0 4px #fff,0 5px 0 #0004}
+.opt .cnt{position:absolute;right:14px;top:10px;background:#0005;border-radius:999px;padding:2px 10px;font-size:.95rem}
+.hctl{display:flex;justify-content:flex-end;align-items:center;gap:14px;margin-top:16px}
+.tleft{font-family:Fredoka;font-size:2.4rem;color:var(--y);min-width:60px;text-align:right}
+.expl{background:#fff;color:var(--ink);border-radius:16px;padding:14px 18px;margin-top:16px;animation:pop .4s}
+.expl p{margin:6px 0 0}
+.bars{display:flex;gap:14px;height:90px;align-items:flex-end;margin-top:14px}
+.barw{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+.barw i{display:block;width:100%;border-radius:8px 8px 0 0;min-height:4px;transition:height .6s}
+.barw span{font-size:.9rem;margin-top:2px}
+.tekmarks{margin-top:16px;background:#ffffff0d;border-radius:16px;padding:10px 12px;display:grid;gap:6px}
+.tkr{display:flex;align-items:center;gap:6px}.tkr span{flex:1;font-weight:800}
+.tkr button{width:44px;height:38px;border-radius:10px;color:#fff;font-size:1.1rem;opacity:.55}
+.tkr button.pick{opacity:1;box-shadow:0 0 0 3px #fff}
+/* cards */
+.qcard{display:flex;justify-content:center}
+.phone{width:100%;max-width:360px;background:#f4f2fb;color:var(--ink);border-radius:30px;border:8px solid #0d0a24;overflow:hidden;box-shadow:0 20px 40px #0006}
+.ph-top{background:#0d0a24;color:#fff;font-size:.8rem;padding:4px 14px 8px;text-align:center}
+.ph-head{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border-bottom:1px solid #e3e0f0}
+.ph-av{width:34px;height:34px;border-radius:50%;background:#e3e0f0;display:grid;place-items:center}
+.p-wa .ph-head{background:#075e54;color:#fff}.p-wa .ph-body{background:#ece5dd}
+.p-dm .ph-head{background:linear-gradient(90deg,#833ab4,#fd1d1d,#fcb045);color:#fff}
+.ph-body{padding:16px 14px 22px;min-height:150px}
+.bub{background:#fff;border-radius:4px 16px 16px 16px;padding:12px 14px;line-height:1.45;box-shadow:0 1px 2px #0002;max-width:92%}
+.p-sms .bub{background:#e5e5ea}
+.lnk{color:#1b5fd1;word-break:break-all}
+.mailc,.webc,.callc,.durc{width:100%;max-width:420px;background:#fff;color:var(--ink);border-radius:18px;overflow:hidden;box-shadow:0 20px 40px #0006}
+.mc-top{background:#c5221f;color:#fff;padding:8px 14px;font-weight:800;font-size:.9rem}
+.mc-from{padding:12px 16px;border-bottom:1px solid #eee}.mc-from code{color:#b0174a;font-size:.85rem;word-break:break-all}
+.mc-body{padding:14px 16px;line-height:1.5}
+.mc-btn{margin-top:12px;background:#1a73e8;color:#fff;border-radius:8px;padding:10px;font-size:.9rem;word-break:break-all}
+.wc-bar{background:#dee1e6;padding:8px 10px;display:flex;gap:8px;align-items:center;font-size:.85rem}
+.wc-url{background:#fff;border-radius:999px;padding:5px 12px;flex:1;word-break:break-all}
+.unsafe{color:#c5221f;font-weight:800}.safe{color:#188038}
+.wc-body{padding:18px}
+.callc{background:linear-gradient(180deg,#2c2c54,#0d0a24);color:#fff;text-align:center;padding:24px 18px}
+.cc-av{font-size:44px}.callc b{display:block;font-size:1.3rem}.callc small{color:#bbb}
+.cc-say{background:#ffffff1a;border-radius:14px;padding:12px;margin:14px 0;line-height:1.45;font-style:italic}
+.cc-btns{display:flex;justify-content:space-around;font-size:28px}
+.durc{padding:18px 20px;line-height:1.5}.dc-tag{display:inline-block;background:#ffd23f;color:#2a1f00;border-radius:999px;padding:4px 12px;font-weight:800;font-size:.85rem}
+/* board */
+.boardv,.finale{text-align:center}
+.boardv h2{font-size:2.2rem;margin-bottom:18px}
+.lb{max-width:760px;margin:0 auto;display:grid;gap:10px}
+.lbr{display:flex;align-items:center;gap:14px;background:#fff;color:var(--ink);border-radius:16px;padding:12px 18px;font-size:1.2rem;animation:slide .45s both}
+.lbr:nth-child(1){background:var(--y)}
+@keyframes slide{from{transform:translateX(-40px);opacity:0}}
+.lbr .pos{font-family:Fredoka;font-size:1.5rem;width:34px}.lbr .av{font-size:1.6rem}.lbr b{flex:1;text-align:left}
+.lbr .gain{color:#127547;font-weight:800}.lbr .sc{font-family:Fredoka;font-size:1.4rem;min-width:70px;text-align:right}
+.fire{font-weight:800}
+.boardv .go,.fbtns .go{display:inline-block;width:auto;padding:14px 36px}
+.fbtns{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:22px}.fbtns .go{margin:0}
+.finale h1{font-size:3rem}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin:26px 0}
+.pd{width:200px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.pd .pav{font-size:54px;animation:bob 2s infinite}.pd b{font-family:Fredoka;font-size:1.3rem}
+.pst{width:100%;border-radius:14px 14px 0 0;font-family:Fredoka;font-size:3rem;display:grid;place-items:center;margin-top:6px}
+.p1 .pst{height:170px;background:var(--y);color:#2a1f00}.p2 .pst{height:120px;background:#cfd6e6;color:#333}.p3 .pst{height:90px;background:#e0975a;color:#3a1d00}
+.lb.small .lbr{font-size:1rem;padding:8px 14px}
+.conf{position:fixed;inset:0;pointer-events:none;z-index:50}
+/* client */
+.client{max-width:520px}
+.chead{display:flex;justify-content:space-between;background:#ffffff14;border-radius:14px;padding:10px 14px;font-weight:800}
+.cq{margin:14px 0}.cq h3{font-size:1.35rem}
+.cops{display:grid;gap:10px}
+.cop{position:relative;color:#fff;border-radius:16px;padding:18px 16px 18px 56px;font-weight:800;font-size:1.1rem;text-align:left;min-height:74px;box-shadow:0 5px 0 #0004}
+.cop:disabled{opacity:.35}.cop.pick{opacity:1;box-shadow:0 0 0 4px #fff}
+.cwait,.cres{text-align:center;padding:36px 10px}
+.big-ic{font-size:72px}
+.cres.ok h2{color:var(--ok)}.cres.no h2{color:#ff8fa3}
+.cres .gain{font-family:Fredoka;font-size:2.6rem;color:var(--y)}
+.cres .ex{background:#ffffff14;border-radius:14px;padding:12px;text-align:left}
+.codein{font-family:Fredoka;font-size:2rem;letter-spacing:.2em;text-align:center;text-transform:uppercase}
+.avs{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.avs button{font-size:1.6rem;padding:8px 0;border-radius:12px;background:#120d33;border:2px solid #3a2f86}.avs button.on{border-color:var(--y);background:#2f2470}
+/* editor */
+.setl{display:grid;gap:8px;margin:12px 0}.setr{display:flex;gap:10px;align-items:center;background:#120d33;border-radius:12px;padding:10px 14px}.setr b{flex:1}
+.edgrid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:10px}
+.oprow{display:flex;gap:8px;align-items:center;margin-bottom:6px}.oprow .sh{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex:none}.oprow label{white-space:nowrap;font-size:.85rem;color:var(--mut)}
+.qlist{display:grid;gap:6px}.ql{display:flex;gap:8px;align-items:center;background:#120d33;border-radius:10px;padding:8px 10px}.ql span{flex:1;font-size:.9rem}
+/* certificates */
+#certs{display:none}
+@media print{
+ @page{size:A4 landscape;margin:0}
+ body.printing{background:#fff}
+ body.printing #app,body.printing .conf{display:none}
+ body.printing #certs{display:block}
+ .cert{width:297mm;height:210mm;padding:12mm;page-break-after:always;color:#1d1b33;font-family:Nunito,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .cbd{height:100%;border:3mm solid #2a1f6b;outline:1mm solid #ffd23f;outline-offset:-6mm;border-radius:6mm;text-align:center;padding:14mm 20mm;position:relative;background:linear-gradient(135deg,#fffdf2,#f3f0ff)}
+ .cseal{font-size:56px}.ctop{letter-spacing:.2em;font-weight:800;color:#6b6597;font-size:12pt}
+ .cert h1{font-family:Fredoka;font-size:40pt;color:#2a1f6b;margin:4mm 0}
+ .cert h2{font-family:Fredoka;font-size:30pt;margin:2mm 0;color:#b0174a}
+ .cfor{margin:0;font-size:13pt}.ctext{font-size:14pt;max-width:200mm;margin:4mm auto}
+ .cskills{color:#6b6597;font-size:11pt}
+ .csign{display:flex;justify-content:space-around;margin-top:10mm}.csign div{display:flex;flex-direction:column;border-top:.5mm solid #2a1f6b;padding-top:2mm;min-width:70mm}.csign span{font-weight:800;font-size:13pt;min-height:6mm}.csign small{color:#6b6597}
+}
+@media (max-width:860px){
+ .menu,.modes,.lob,.qbody,.edgrid{grid-template-columns:1fr}
+ .row3{grid-template-columns:1fr}.panel{padding:18px 14px}
+ .opts{grid-template-columns:1fr}.code{font-size:3.2rem}.pd{width:110px}.pd b{font-size:1rem}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="certs"></div>
+<script>
+/* Soru bankası
+ kart türleri: sms, wa, dm, mail, web, call, durum
+ her soru: {k:kart türü, f:gönderen/başlık, a:adres/numara, m:mesaj (HTML değil, düz metin; **kalın**), u:bağlantı,
+            q:soru, o:[seçenekler], c:doğru indeks, e:açıklama} */
+var BANK={
+ ilk:{name:'5–6. sınıf',ic:'🧒',d:'Oyun hesapları, şifreler, tanımadığın kişiler',qs:[
+  {k:'dm',f:'@oyun_hediye_merkezi',m:'Tebrikler!! 🎉 Bedava 5000 elmas kazandın. Almak için kullanıcı adını ve **şifreni** yaz 👇',q:'Bu mesaja ne yaparsın?',o:['Şifremi yazarım, elmas bedava!','Yanıt vermem, hesabı engeller ve bir yetişkine söylerim','Sadece kullanıcı adımı yazarım'],c:1,e:'Hiçbir oyun şifreni mesajla istemez. “Bedava elmas” hesap çalmanın en bilinen yoludur.'},
+  {k:'durum',f:'Şifre seçimi',m:'Yeni oyun hesabın için şifre belirliyorsun.',q:'Hangisi en güçlü şifre?',o:['ali2014','123456','Mavi-Kedi7Uçtu!','benimşifrem'],c:2,e:'Uzun, harf + rakam + sembol içeren ve adını ya da doğum yılını içermeyen şifreler güçlüdür.'},
+  {k:'wa',f:'+90 541 222 33 44',m:'Selam! Ben senin okuldan bir arkadaşınım 😊 Ev adresini atar mısın, sana hediye göndereceğim',q:'Ne yaparsın?',o:['Adresimi gönderirim','Kim olduğunu sorar, sonra gönderirim','Tanımadığım biri; adres vermem, aileme gösteririm'],c:2,e:'Tanımadığın birine adres, okul ya da telefon gibi bilgiler verilmez. Ailene göster.'},
+  {k:'durum',f:'Arkadaşın istiyor',m:'En yakın arkadaşın: “Şifreni söyler misin, senin hesabından oynayacağım.”',q:'Ne yaparsın?',o:['Söylerim, o benim en iyi arkadaşım','Söylemem; şifre sadece bana ve aileme özeldir','Yarısını söylerim'],c:1,e:'Şifre en yakın arkadaşla bile paylaşılmaz. Arkadaşlıklar değişebilir, hesabın senin kalmalı.'},
+  {k:'web',f:'Bedava Oyun İndir!!!',a:'http://bedava-oyun-indir-hemen.xyz',m:'🎮 Ücretli oyunu BEDAVA indir! Sadece “İzin ver”e bas ve kurulumu başlat.',q:'Bu siteden oyun indirmek güvenli mi?',o:['Evet, bedava fırsat','Hayır; oyunları sadece resmî mağazadan indiririm','Antivirüs varsa sorun olmaz'],c:1,e:'“Güvenli değil” uyarısı ve garip adres tehlike işaretidir. Uygulamalar yalnızca resmî mağazadan indirilir.'},
+  {k:'dm',f:'@komik_videolar_tr',m:'Sınıfından birinin utanç verici videosu var bende 😂 Görmek ister misin? Herkese gönder!',q:'Ne yaparsın?',o:['Bakarım ve arkadaşlarıma gönderirim','Bakmam, paylaşmam ve bir öğretmene ya da aileme söylerim','Sadece bakarım, kimseye göndermem'],c:1,e:'Başkasını utandıran içerikleri paylaşmak siber zorbalıktır. Yayma, bir yetişkine söyle.'},
+  {k:'durum',f:'Fotoğraf paylaşımı',m:'Okul formanla, okulun önünde çekilmiş bir fotoğrafını herkese açık hesabından paylaşmak istiyorsun.',q:'Bu fotoğraf neden risk taşır?',o:['Risk yok, sadece fotoğraf','Okulumu ve nerede olduğumu yabancılara gösterir','Fotoğraf kalitesi düşebilir'],c:1,e:'Forma, okul tabelası, ev önü gibi detaylar nerede olduğunu gösterir. Hesabını gizli tut, detaylara dikkat et.'},
+  {k:'sms',f:'OYUNMARKET',m:'Hesabınızdan 499 TL elmas satın alındı. Siz değilseniz hemen tıklayın: oyunmarket-iade.net',u:'oyunmarket-iade.net',q:'Bu mesaj gerçek mi?',o:['Gerçek, hemen tıklamalıyım','Şüpheli; tıklamam, ailemle oyunun kendi uygulamasından bakarım'],c:1,e:'Panik yaratıp linke tıklatmak klasik bir tuzaktır. Hesabını resmî uygulamadan kontrol et.'},
+  {k:'durum',f:'Oyunda sohbet',m:'Oyunda tanıştığın biri: “Kimseye söyleme ama seninle buluşmak istiyorum. Okulun nerede?”',q:'Ne yaparsın?',o:['Okulumu söylerim','Sohbeti keser, engeller ve hemen aileme anlatırım','Önce fotoğrafını isterim'],c:1,e:'“Kimseye söyleme” diyen yabancılar tehlikelidir. Sohbeti kes, engelle ve mutlaka bir yetişkine anlat.'},
+  {k:'durum',f:'Ortak bilgisayar',m:'Okul bilgisayar laboratuvarında oyun hesabına girdin. Ders bitti.',q:'Çıkmadan önce ne yaparsın?',o:['Hiçbir şey, bilgisayar kapanır','Hesabımdan çıkış yaparım ve “şifreyi hatırla”yı seçmem','Şifremi masaya not ederim'],c:1,e:'Ortak bilgisayarlarda hesaptan çıkış yap; tarayıcının şifreni kaydetmesine izin verme.'}
+ ]},
+ orta:{name:'7–8. sınıf',ic:'🧑',d:'Oltalama, sahte haber, sosyal medya, siber zorbalık',qs:[
+  {k:'mail',f:'Yıldız Koleji BT',a:'destek@yi1dizkoleji.k12.tr',m:'Okul hesabınızın şifresi **bugün** sona eriyor. Hesabınızın silinmemesi için 2 saat içinde giriş yapın.',u:'yildizkoleji-giris.com',q:'Bu e-postadaki en büyük tehlike işareti hangisi?',o:['Konusu “şifre” ile ilgili','Gönderen adreste “l” yerine “1” var ve acele ettiriyor','E-posta okul saatinde gelmiş'],c:1,e:'Adresi harf harf oku: yi1dizkoleji. Acele ettirmek de oltalamanın klasik işaretidir.'},
+  {k:'wa',f:'8-B Sınıf Grubu',m:'Mert: 🚨 MEB AÇIKLADI: Yarın tüm okullar TATİL!! (ekran görüntüsü · 12 Ocak 2023) Herkes yaysın!!',q:'Paylaşmadan önce ne yapmalısın?',o:['Hemen paylaşırım, herkes paylaşıyor','Tarihine ve resmî kaynağa (MEB, valilik) bakarım','Arkadaşlarıma sorarım, onlar ne derse'],c:1,e:'Haberin tarihi 2023! Eski haberler yeniden dolaşır. Resmî kaynağı kontrol et, doğrulamadan paylaşma.'},
+  {k:'dm',f:'@hediye.dunyasi_tr',m:'🎁 Çekilişimizde iPhone 16 kazandın! Sadece 49,90 TL kargo ücretini öde: hediye-dunyasi-tr.com/odul',q:'Bu mesaj neden sahte olabilir?',o:['Katılmadığın bir çekiliş ve senden ücret istiyor','Emoji kullanmış','Mesaj kısa'],c:0,e:'Gerçek çekilişler kazanandan para istemez. “Sadece kargo ücreti” kart bilgisi çalma tuzağıdır.'},
+  {k:'durum',f:'Sınıf grubu',m:'Sınıf grubunda bir arkadaşınla ilgili alay eden bir fotoğraf dolaşıyor. Herkes gülüyor.',q:'En doğru davranış hangisi?',o:['Ben de gülme emojisi atarım','Fotoğrafı başka gruba iletirim','“Bu zorbalık, silin” derim ve arkadaşıma destek olurum'],c:2,e:'Gülmek ve iletmek zorbalığı büyütür. Karşı çık, arkadaşına yalnız olmadığını söyle, bir yetişkine bildir.'},
+  {k:'call',f:'+90 553 781 44 02',m:'“Ali, benim annen! Telefonum bozuldu, acil para lazım, babana söyleme!” (Ses annene çok benziyor.)',q:'Ne yaparsın?',o:['Ses aynı, hemen gönderirim','Kapatıp annemi kendi kayıtlı numarasından ararım','Ne kadar lazım diye sorarım'],c:1,e:'Yapay zekâ birkaç saniyelik kayıttan sesi taklit edebilir. Kapat ve kişiyi kendi numarasından ara.'},
+  {k:'sms',f:'BLOKDUNYA',m:'Doğrulama kodun: 482913. Bu kodu kimseyle paylaşma.',q:'Hemen ardından “BlokDünya Destek” yazıp bu kodu istiyor. Ne yaparsın?',o:['Destek ekibi, veririm','Vermem; kodu kimse istemez, destek ekibi bile','Kodun yarısını veririm'],c:1,e:'Doğrulama kodu sadece sana özeldir. İsteyen herkes dolandırıcıdır.'},
+  {k:'web',f:'Merak Testi',a:'https://magaza.app/merak-testi',m:'Bu uygulama şunlara erişmek istiyor: 👥 Rehber · 📍 Konum · 🎤 Mikrofon · 📷 Kamera',q:'“Hangi karaktersin?” testi için hangisi gerçekten gerekli?',o:['Hepsi gerekli','Hiçbiri gerekli değil','Sadece rehber'],c:1,e:'Bir eğlence testinin rehberine, konumuna, mikrofonuna ya da kamerana ihtiyacı yok. Gereksiz izni reddet.'},
+  {k:'durum',f:'Herkese açık profil',m:'Profilinde kedinin adı (Pamuk), doğduğun şehir (Trabzon) ve doğum tarihin paylaşılmış.',q:'Bu bilgiler neden risklidir?',o:['Risk yok','Güvenlik sorularının cevapları olabilir','Takipçi kaybettirir'],c:1,e:'“İlk evcil hayvanın?”, “Doğduğun şehir?” gibi güvenlik soruları bu bilgilerle aşılabilir.'},
+  {k:'web',f:'Okul Portalı',a:'http://yildizkoleji-portal.com/giris',m:'⭐ Yıldız Koleji · Öğrenci Girişi  ⏰ Hesabınız 10 dakika içinde kapatılacak!',q:'Bu giriş sayfası neden şüpheli?',o:['Logo var','Adres okulun kendi adresi değil ve “Güvenli değil” uyarısı var','Renkleri güzel'],c:1,e:'Logo ve renkler kopyalanabilir, adres kopyalanamaz. Önemli sitelere adresi kendin yazarak gir.'},
+  {k:'durum',f:'İki aşamalı doğrulama',m:'Arkadaşın “İki aşamalı doğrulama ne işe yarar ki?” diye soruyor.',q:'Doğru cevap hangisi?',o:['İnterneti hızlandırır','Şifre çalınsa bile telefona gelen kod olmadan girişi engeller','Şifreyi gereksiz kılar'],c:1,e:'Şifren çalınsa bile ikinci adımdaki kod olmadan kimse hesabına giremez.'}
+ ]},
+ lise:{name:'Lise',ic:'🎓',d:'Dijital ayak izi, deepfake, veri gizliliği, dolandırıcılık',qs:[
+  {k:'mail',f:'İK · Staj Programı',a:'kariyer@staj-firsati-2026.com',m:'Yaz stajına kabul edildin! 🎉 Kaydını tamamlamak için kimlik fotoğrafını ve 250 TL “dosya ücretini” 24 saat içinde gönder.',q:'Bu teklifte en şüpheli şey ne?',o:['Yaz stajı olması','Başvurmadığın bir staj için ücret ve kimlik istemesi','E-postanın uzun olması'],c:1,e:'Gerçek işverenler “dosya ücreti” istemez. Kimlik fotoğrafı kimlik hırsızlığında kullanılabilir.'},
+  {k:'durum',f:'Dijital ayak izi',m:'3 yıl önce attığın kaba bir tweet, başvurduğun burs görüşmesinde önüne çıkıyor.',q:'Bu durum ne gösteriyor?',o:['İnternette paylaşılanlar kalıcı olabilir','Eski paylaşımlar otomatik silinir','Kimse eski paylaşımlara bakmaz'],c:0,e:'Silinse bile ekran görüntüsü ve arşivlerde kalabilir. Paylaşmadan önce “5 yıl sonra nasıl görünür?” diye düşün.'},
+  {k:'web',f:'Video',a:'https://video-paylas.net/izle',m:'Ünlü bir bakanın “Yarın tüm bankalar kapanıyor, paranızı çekin!” dediği video viral oldu. Dudak hareketleri sese tam uymuyor.',q:'Ne yaparsın?',o:['Hemen paylaşırım','Deepfake olabilir; resmî kaynaklardan ve doğrulama sitelerinden kontrol ederim','Bankaya koşarım'],c:1,e:'Yapay zekâ ile sahte video üretilebilir. Panik yaratan içeriği resmî kaynaklardan doğrula.'},
+  {k:'durum',f:'Halka açık Wi-Fi',m:'Kafede “Ucretsiz_WiFi” adlı şifresiz ağa bağlandın.',q:'Bu ağda hangisini yapmamalısın?',o:['Haber okumak','İnternet bankacılığına girmek','Hava durumuna bakmak'],c:1,e:'Şifresiz ağlarda trafik izlenebilir. Hassas işlemleri mobil veriyle ya da güvenilir ağda yap.'},
+  {k:'dm',f:'@kolay_kazanc_kripto',m:'Ayda %40 garantili kazanç 🚀 1.000 TL yatır, 3 ayda 2.744 TL al. Arkadaşını getir, %10 bonus!',q:'Bu teklifin adı ne olabilir?',o:['Akıllı yatırım','Saadet zinciri / dolandırıcılık','Burs programı'],c:1,e:'“Garantili yüksek kazanç” ve “arkadaşını getir” saadet zincirinin işaretleridir. Yatırımda garanti yoktur.'},
+  {k:'durum',f:'Şifre tekrarı',m:'Aynı şifreyi e-posta, sosyal medya ve oyun hesabında kullanıyorsun. Oyun sitesinin verileri sızdırıldı.',q:'En doğru adım hangisi?',o:['Sadece oyun şifresini değiştiririm','Bu şifreyi kullandığım tüm hesaplarda değiştirir, iki aşamalı doğrulamayı açarım','Hiçbir şey, sızıntı beni bulmaz'],c:1,e:'Saldırganlar sızan şifreyi diğer sitelerde de dener. Her hesaba farklı şifre ve bir şifre yöneticisi kullan.'},
+  {k:'durum',f:'Uygulama izni',m:'Bir fener uygulaması rehberine, konumuna ve SMS’lerine erişmek istiyor.',q:'Ne yaparsın?',o:['Hepsine izin veririm','Fener için bunlar gereksiz; izin vermem ya da uygulamayı kaldırırım','Sadece SMS’e izin veririm'],c:1,e:'Uygulamanın işiyle ilgisi olmayan izinler veri toplamak için istenir.'},
+  {k:'sms',f:'KARGO',m:'Gönderiniz adres eksikliği nedeniyle bekliyor. 12 TL ödeme ile yeniden dağıtım: ptt-kargo-takip.info',u:'ptt-kargo-takip.info',q:'Bu SMS’e ne yaparsın?',o:['12 TL az, öderim','Linke tıklamam; kargonu firmanın resmî uygulamasından takip ederim'],c:1,e:'Küçük ücretler kart bilgini çalmak için kullanılır. Adres kurumun resmî adresi değil.'},
+  {k:'durum',f:'Rıza',m:'Arkadaşın, sizin grup fotoğrafınızı izin almadan herkese açık paylaştı. Sen fotoğrafta rahat değilsin.',q:'En doğru yaklaşım hangisi?',o:['Hiçbir şey demem','Arkadaşımdan nazikçe kaldırmasını isterim; olmazsa platforma bildiririm','Ben de onun utandırıcı fotoğrafını paylaşırım'],c:1,e:'Başkalarının fotoğrafını paylaşmadan önce izin almak gerekir. Önce konuş, gerekirse bildir.'},
+  {k:'durum',f:'Yapay zekâ sohbeti',m:'Ödev için bir yapay zekâ sohbet aracına ad soyadını, okulunu ve sağlık bilgini yazmak üzeresin.',q:'Ne yapmalısın?',o:['Sorun yok, yapay zekâ gizli tutar','Kişisel ve hassas bilgileri yazmam; sorumu genel tutarım','Sadece sağlık bilgisini yazarım'],c:1,e:'Sohbet araçlarına yazdıkların kaydedilebilir. Kişisel ve hassas bilgileri paylaşma.'}
+ ]},
+ veli:{name:'Veli',ic:'👨‍👩‍👧',d:'Banka, kargo, e-Devlet, çocuğunuzu koruma',qs:[
+  {k:'call',f:'0 850 302 41 19',m:'“Bankanızın güvenlik biriminden arıyoruz. Hesabınızda şüpheli işlem var. Telefonunuza gelen kodu okur musunuz?”',q:'Ne yaparsınız?',o:['Kodu okurum, banka arıyor','Telefonu kapatır, bankamı kartın arkasındaki numaradan kendim ararım','Önce adını sorarım, sonra okurum'],c:1,e:'Bankalar telefonda şifre ya da SMS kodu istemez. Kapatın ve bankayı kendiniz arayın.'},
+  {k:'sms',f:'E-DEVLET',m:'e-Devlet hesabınız askıya alınmıştır. Açmak için giriş yapınız: e-devlet-giris.net',u:'e-devlet-giris.net',q:'Bu mesaj neden sahte?',o:['e-Devlet SMS göndermez','e-Devlet’in resmî adresi turkiye.gov.tr; bu adres farklı','Askıya alma diye bir şey yok'],c:1,e:'Sahte adresler resmî adı taklit eder. e-Devlet’e her zaman adresi kendiniz yazarak girin.'},
+  {k:'wa',f:'+90 532 418 77 05',m:'Anne benim, telefonum bozuldu bu yeni numaram 🙏 Acil 2.000 TL lazım, sonra anlatırım',q:'İlk ne yaparsınız?',o:['Hemen gönderirim','Çocuğumu eski numarasından ya da okuldan arayarak doğrularım','Hesap numarası isterim'],c:1,e:'“Yeni numara + acil para” en yaygın dolandırıcılıktır. Mutlaka bilinen bir kanaldan doğrulayın.'},
+  {k:'mail',f:'Yıldız Koleji Muhasebe',a:'muhasebe@yildizkoleji-odeme.com',m:'Okul aidatınız gecikmiştir. 24 saat içinde aşağıdaki bağlantıdan ödeme yapmazsanız kayıt dondurulacaktır.',u:'yildizkoleji-odeme.com',q:'Bu e-postayı nasıl kontrol edersiniz?',o:['Linkten öderim, kayıt donmasın','Gönderen adresini kontrol eder, okulu bildiğim numaradan ararım'],c:1,e:'Adres okulun kendi alan adı değil ve tehditle acele ettiriyor. Okulu bilinen kanaldan arayın.'},
+  {k:'durum',f:'Çocuğunuzun oyunu',m:'Çocuğunuz oyunda tanıştığı biriyle özel mesajlaşıyor ve “Bunu anneme söyleme” dediğini anlatıyor.',q:'En doğru yaklaşım hangisi?',o:['Oyunu yasaklarım, konuşmam','Sakin kalır, konuşmayı birlikte inceler, kişiyi engeller ve gerekirse bildiririm','Önemsemem, çocuktur'],c:1,e:'“Ailene söyleme” ciddi bir uyarı işaretidir. Suçlamadan konuşun ki çocuğunuz size gelmeye devam etsin.'},
+  {k:'dm',f:'@indirim_dunyasi_resmi',m:'Sadece bugün! Markalı ayakkabı %80 indirimli 👟 Ödeme yalnızca havale ile.',q:'En büyük tehlike işareti hangisi?',o:['Ayakkabı satması','Aşırı indirim ve sadece havale ile ödeme','Instagram’da olması'],c:1,e:'Gerçek mağazalar kartla ödeme ve iade imkânı sunar. Aşırı indirim + sadece havale = dolandırıcılık riski.'},
+  {k:'durum',f:'Paylaşım',m:'Çocuğunuzun okul önünde, okul adı görünen bir fotoğrafını tatil tarihleriyle birlikte herkese açık paylaşmak üzeresiniz.',q:'Bu paylaşım neden risklidir?',o:['Risk yok','Çocuğun okulunu ve evin boş kalacağı tarihleri yabancılara gösterir'],c:1,e:'Okul, konum ve tatil tarihleri kötü niyetli kişilerin işine yarar. Hesabınızı gizli tutun.'},
+  {k:'sms',f:'KARGO',m:'Paketiniz gümrükte bekliyor. 37,50 TL gümrük ücreti ödeyiniz: gumruk-odeme-tr.com',u:'gumruk-odeme-tr.com',q:'Ne yaparsınız?',o:['Öderim, küçük bir ücret','Sipariş verip vermediğimi kontrol eder, linke tıklamadan kargo firmasının resmî uygulamasına bakarım'],c:1,e:'Beklemediğiniz bir paket için küçük ücret isteyen SMS kart bilgisi çalma tuzağıdır.'},
+  {k:'durum',f:'Ebeveyn denetimi',m:'10 yaşındaki çocuğunuza ilk telefonunu aldınız.',q:'Hangisi en doğru başlangıç?',o:['Hiçbir ayar yapmam','Ebeveyn denetimi, uygulama indirme onayı ve birlikte belirlenen kullanım kuralları','Telefonu gizlice izlerim, konuşmam'],c:1,e:'Teknik önlemler kadar açık iletişim de önemlidir. Kuralları çocuğunuzla birlikte belirleyin.'},
+  {k:'durum',f:'Yatırım reklamı',m:'Ünlü bir iş insanının fotoğrafıyla “Devlet destekli yatırım platformu, günde 3.000 TL kazanın” reklamı görüyorsunuz.',q:'Bu reklam hakkında ne düşünürsünüz?',o:['Ünlü biri önerdiyse güvenilirdir','Ünlülerin fotoğrafı izinsiz kullanılan tipik bir dolandırıcılık reklamıdır','Devlet destekli dediyse gerçektir'],c:1,e:'Ünlü yüzleri ve “devlet destekli” sözünü kullanan yüksek kazanç vaatleri dolandırıcılıktır.'}
+ ]}
+};
+</script>
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id)};
+function qa(s,r){return [].slice.call((r||document).querySelectorAll(s))}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]})}
+function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')}
+function shuf(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function ls(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||'null');localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+var APP=$('app');
+var SHAPES=['▲','◆','●','■'],COLS=['c0','c1','c2','c3'];
+var AV=['🦊','🐼','🦁','🐯','🐸','🐙','🦄','🐧','🐝','🦉','🐬','🐢'];
+var PFX='siberarena-';
+var LOCAL=/[?&]yerel=1/.test(location.search);
+
+/* =============== SES =============== */
+var AC=null;function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC}
+function tone(f,d,t,v,w){var a=ac();if(!a)return;var s=a.currentTime+(w||0),o=a.createOscillator(),g=a.createGain();o.type=t||'sine';o.frequency.value=f;g.gain.setValueAtTime(.0001,s);g.gain.exponentialRampToValueAtTime(v||.12,s+.01);g.gain.exponentialRampToValueAtTime(.0001,s+d);o.connect(g);g.connect(a.destination);o.start(s);o.stop(s+d+.05)}
+var SFX={join:function(){tone(660,.12,'triangle');tone(990,.15,'triangle',.1,.1)},tick:function(){tone(1200,.04,'square',.04)},good:function(){[523,659,784,1047].forEach(function(f,i){tone(f,.2,'triangle',.12,i*.08)})},bad:function(){tone(220,.3,'sawtooth',.08)},end:function(){[523,659,784,1047,784,1047,1319].forEach(function(f,i){tone(f,.28,'triangle',.12,i*.12)})}};
+
+/* =============== KART GÖRÜNÜMÜ =============== */
+function card(q){
+ var k=q.k,h='';
+ if(k==='sms'||k==='wa'||k==='dm'){
+  var app={sms:'💬 Mesajlar',wa:'🟢 WhatsApp',dm:'📸 Mesaj isteği'}[k];
+  h='<div class="phone p-'+k+'"><div class="ph-top">'+app+'</div><div class="ph-head"><span class="ph-av">'+(k==='sms'?'✉️':'👤')+'</span><b>'+esc(q.f)+'</b></div><div class="ph-body"><div class="bub">'+md(q.m)+(q.u?'<br><u class="lnk">'+esc(q.u)+'</u>':'')+'</div></div></div>';
+ }else if(k==='mail'){
+  h='<div class="mailc"><div class="mc-top">📧 Gelen Kutusu</div><div class="mc-from"><b>'+esc(q.f)+'</b><br><code>&lt;'+esc(q.a||'')+'&gt;</code></div><div class="mc-body">'+md(q.m)+(q.u?'<div class="mc-btn">Bağlantıya git → <u>'+esc(q.u)+'</u></div>':'')+'</div></div>';
+ }else if(k==='web'){
+  var bad=/^http:\/\//.test(q.a||'');
+  h='<div class="webc"><div class="wc-bar"><span class="'+(bad?'unsafe':'safe')+'">'+(bad?'⚠️ Güvenli değil':'🔒')+'</span><span class="wc-url">'+esc(q.a||'')+'</span></div><div class="wc-body"><b>'+esc(q.f)+'</b><p>'+md(q.m)+'</p></div></div>';
+ }else if(k==='call'){
+  h='<div class="callc"><div class="cc-av">📞</div><b>'+esc(q.f)+'</b><small>Gelen arama</small><div class="cc-say">'+md(q.m)+'</div><div class="cc-btns"><span>📵</span><span>📞</span></div></div>';
+ }else{
+  h='<div class="durc"><div class="dc-tag">📌 '+esc(q.f||'Durum')+'</div><p>'+md(q.m)+'</p></div>';
+ }
+ return h;
+}
+
+/* =============== BAĞLANTI =============== */
+// Sunucu (öğretmen) ve istemci (öğrenci) için ortak arayüz: send(to,msg), broadcast(msg), on(msg)
+function HostNet(code,onMsg,onReady,onFail){
+ var self=this;self.conns={};
+ if(LOCAL){
+  var bc=new BroadcastChannel(PFX+code);
+  bc.onmessage=function(e){var m=e.data;if(m.to!=='host')return;onMsg(m.from,m.d)};
+  self.send=function(to,d){bc.postMessage({to:to,from:'host',d:d})};
+  setTimeout(onReady,50);return;
+ }
+ if(!window.Peer){onFail('Bağlantı kütüphanesi yüklenemedi.');return}
+ var peer=new Peer(PFX+code,{debug:0});
+ peer.on('open',function(){onReady()});
+ peer.on('error',function(e){onFail(e&&e.type==='unavailable-id'?'Bu oda kodu kullanımda.':'Bağlantı kurulamadı ('+(e&&e.type||'hata')+').')});
+ peer.on('connection',function(c){
+  c.on('data',function(d){if(d&&d.from){self.conns[d.from]=c;onMsg(d.from,d.d)}});
+ });
+ self.send=function(to,d){var c=self.conns[to];if(c&&c.open)try{c.send({d:d})}catch(e){}};
+ self.peer=peer;
+}
+function ClientNet(code,me,onMsg,onOpen,onFail){
+ var self=this;
+ if(LOCAL){
+  var bc=new BroadcastChannel(PFX+code);
+  bc.onmessage=function(e){var m=e.data;if(m.to!==me)return;onMsg(m.d)};
+  self.send=function(d){bc.postMessage({to:'host',from:me,d:d})};
+  setTimeout(onOpen,50);return;
+ }
+ if(!window.Peer){onFail('Bağlantı kütüphanesi yüklenemedi.');return}
+ var peer=new Peer({debug:0}),conn=null,opened=false;
+ peer.on('open',function(){
+  conn=peer.connect(PFX+code,{reliable:true});
+  conn.on('open',function(){opened=true;onOpen()});
+  conn.on('data',function(d){onMsg(d.d)});
+  conn.on('close',function(){onFail('Öğretmen ekranıyla bağlantı koptu.')});
+  setTimeout(function(){if(!opened)onFail('Oda bulunamadı. Kodu kontrol et.')},9000);
+ });
+ peer.on('error',function(e){onFail(e&&e.type==='peer-unavailable'?'Oda bulunamadı. Kodu kontrol et.':'Bağlantı kurulamadı ('+(e&&e.type||'hata')+').')});
+ self.send=function(d){if(conn&&conn.open)conn.send({from:me,d:d})};
+}
+
+/* =============== ANA MENÜ =============== */
+function home(){
+ stopAll();
+ var p=new URLSearchParams(location.search),oda=p.get('oda');
+ if(oda)return joinScreen(oda.toUpperCase());
+ APP.className='home';
+ APP.innerHTML='<div class="hero"><div class="logo">🛡️</div><h1>SİBER <span>ARENA</span></h1><p>Dijital güvenlik bilgi yarışması · Takımlar telefondan yarışır, skor tahtada canlı güncellenir.</p></div>'+
+ '<div class="menu"><button class="big b1" id="mHost"><span>🎤</span><b>Yarışma kur</b><small>Öğretmen ekranı / akıllı tahta</small></button>'+
+ '<button class="big b2" id="mJoin"><span>📱</span><b>Yarışmaya katıl</b><small>Öğrenci ya da takım telefonu</small></button>'+
+ '<button class="big b3" id="mEdit"><span>✏️</span><b>Kendi sorularını yaz</b><small>Öğretmen ve öğrenciler için soru editörü</small></button></div>'+
+ '<p class="foot">Siber Arena · Hacklenen Hesap oyununun kardeşi · <a href="https://polatsunay.github.io/siber-5/" target="_blank" rel="noopener">Kaçış oyununu oyna</a></p>';
+ $('mHost').onclick=hostSetup;$('mJoin').onclick=function(){joinScreen('')};$('mEdit').onclick=function(){editor()};
+}
+
+/* =============== ÖĞRETMEN: KURULUM =============== */
+var H=null; // sunucu durumu
+function sets(){return ls('sa-sets')||[]}
+function hostSetup(){
+ stopAll();
+ var cfg=ls('sa-cfg')||{lvl:'orta',n:10,t:20,mode:'net',teacher:''};
+ var my=sets();
+ APP.className='setup';
+ APP.innerHTML='<div class="panel"><button class="back" id="bk">← Ana menü</button><h2>🎤 Yarışma kur</h2>'+
+ '<div class="lbl">Seviye</div><div class="lvls" id="lv">'+Object.keys(BANK).map(function(k){var L=BANK[k];return '<button data-l="'+k+'" class="'+(cfg.lvl===k?'on':'')+'"><span>'+L.ic+'</span><b>'+L.name+'</b><small>'+L.d+'</small></button>'}).join('')+my.map(function(s,i){return '<button data-l="set'+i+'" class="'+(cfg.lvl==='set'+i?'on':'')+'"><span>✏️</span><b>'+esc(s.name)+'</b><small>Kendi setin · '+s.qs.length+' soru</small></button>'}).join('')+'</div>'+
+ '<div class="row3"><div><div class="lbl">Soru sayısı</div><div class="chips" id="cn">'+[5,8,10].map(function(n){return '<button data-n="'+n+'" class="'+(cfg.n===n?'on':'')+'">'+n+'</button>'}).join('')+'</div></div>'+
+ '<div><div class="lbl">Süre (saniye)</div><div class="chips" id="ct">'+[15,20,30].map(function(n){return '<button data-t="'+n+'" class="'+(cfg.t===n?'on':'')+'">'+n+'</button>'}).join('')+'</div></div>'+
+ '<div><div class="lbl">Öğretmen adı (sertifika için)</div><input id="tn" class="inp" maxlength="40" value="'+esc(cfg.teacher)+'" placeholder="Örn. Sunay Öğretmen"></div></div>'+
+ '<div class="lbl">Oyun biçimi</div><div class="modes" id="md"><button data-m="net" class="'+(cfg.mode==='net'?'on':'')+'"><b>📱 Telefonlarla</b><small>Takımlar kendi telefonlarından katılır. İnternet gerekir.</small></button><button data-m="tek" class="'+(cfg.mode==='tek'?'on':'')+'"><b>🖥️ Tek ekran</b><small>Takımlar cevaplarını söyler, öğretmen tahtada işaretler.</small></button></div>'+
+ '<button class="go" id="go">Odayı aç ▶</button></div>';
+ $('bk').onclick=home;
+ function pick(id,attr,key,num){qa('#'+id+' button').forEach(function(b){b.onclick=function(){cfg[key]=num?+b.dataset[attr]:b.dataset[attr];qa('#'+id+' button').forEach(function(x){x.classList.toggle('on',x===b)})}})}
+ pick('lv','l','lvl');pick('cn','n','n',1);pick('ct','t','t',1);pick('md','m','mode');
+ $('go').onclick=function(){ac();cfg.teacher=$('tn').value.trim();ls('sa-cfg',cfg);startHost(cfg)};
+}
+function pool(lvl){
+ if(lvl.indexOf('set')===0){var s=sets()[+lvl.slice(3)];return s?{name:s.name,ic:'✏️',qs:s.qs}:BANK.orta}
+ return BANK[lvl]||BANK.orta;
+}
+function newCode(){var A='ABCDEFGHJKLMNPRSTUVYZ23456789',c='';for(var i=0;i<5;i++)c+=A[Math.floor(Math.random()*A.length)];return c}
+function startHost(cfg){
+ var P=pool(cfg.lvl),qs=shuf(P.qs).slice(0,Math.min(cfg.n,P.qs.length)).map(function(q){
+  // seçenekleri karıştır, doğru cevabı izle
+  var ord=shuf(q.o.map(function(x,i){return i}));return Object.assign({},q,{o:ord.map(function(i){return q.o[i]}),c:ord.indexOf(q.c)});
+ });
+ H={cfg:cfg,code:newCode(),lvlName:P.name,lvlIc:P.ic,qs:qs,qi:-1,phase:'lobby',teams:{},order:[],ans:{},deadline:0,net:null};
+ if(cfg.mode==='tek'){H.phase='tekLobby';tekLobby();return}
+ lobby();
+ H.net=new HostNet(H.code,hostMsg,function(){H.ready=true;lobby()},function(err){H.netErr=err;lobby()});
+}
+
+/* ----- Lobi ----- */
+function joinURL(){return location.origin+location.pathname+'?oda='+H.code+(LOCAL?'&yerel=1':'')}
+function lobby(){
+ if(!H||H.phase!=='lobby')return;
+ APP.className='lobby';
+ var t=H.order.map(function(id){return H.teams[id]});
+ APP.innerHTML='<div class="lob"><div class="lob-l"><div class="lbl">Katılmak için</div><div class="url">'+esc(location.host+location.pathname.replace(/index\.html$/,''))+'</div><div class="lbl">Oda kodu</div><div class="code">'+H.code+'</div>'+
+ '<div id="qr" class="qr"></div>'+(H.netErr?'<div class="err">⚠️ '+esc(H.netErr)+' Okul ağı bağlantıyı engelliyor olabilir.<br><button id="toTek" class="sm">🖥️ Tek ekran moduna geç</button></div>':H.ready?'<div class="okc">✅ Oda hazır. Takımlar katılabilir.</div>':'<div class="wait">⏳ Oda açılıyor…</div>')+'</div>'+
+ '<div class="lob-r"><h2>'+H.lvlIc+' '+esc(H.lvlName)+' · '+H.qs.length+' soru</h2><div class="lbl">Takımlar ('+t.length+')</div><div class="teams">'+(t.length?t.map(function(x){return '<span class="tm">'+x.av+' '+esc(x.name)+'</span>'}).join(''):'<p class="muted">Henüz kimse katılmadı…</p>')+'</div>'+
+ '<button class="go" id="startQ" '+(t.length?'':'disabled')+'>Yarışmayı başlat ▶</button><button class="back" id="bk">← Vazgeç</button></div></div>';
+ if(window.QRCode&&$('qr')){try{new QRCode($('qr'),{text:joinURL(),width:180,height:180,correctLevel:QRCode.CorrectLevel.M})}catch(e){}}
+ $('bk').onclick=function(){stopAll();hostSetup()};
+ if($('toTek'))$('toTek').onclick=function(){stopAll();H.cfg.mode='tek';var c=H.cfg;startHost(c)};
+ $('startQ').onclick=function(){nextQ()};
+}
+function hostMsg(from,d){
+ if(!H)return;
+ if(d.t==='join'){
+  var tm=H.teams[from];
+  if(!tm){
+   if(H.phase!=='lobby'&&!H.teams[from]){H.net.send(from,{t:'err',m:'Yarışma başladı; yeni takım katılamaz.'});return}
+   var name=String(d.name||'Takım').slice(0,18),n=name,i=2;
+   while(H.order.some(function(id){return H.teams[id].name===n}))n=name+' '+(i++);
+   tm=H.teams[from]={id:from,name:n,av:d.av||'🦊',score:0,streak:0,last:null,hist:[]};H.order.push(from);SFX.join();
+  }
+  sendState(from);
+  if(H.phase==='lobby')lobby();
+ }
+ if(d.t==='ans'&&H.phase==='q'&&d.qi===H.qi&&H.ans[from]==null&&H.teams[from]){
+  H.ans[from]={a:+d.a,at:Date.now()};sendState(from);
+  if($('ansN'))$('ansN').textContent=Object.keys(H.ans).length+' / '+H.order.length;
+  if(Object.keys(H.ans).length>=H.order.length)setTimeout(reveal,600);
+ }
+}
+function rank(){return H.order.map(function(id){return H.teams[id]}).sort(function(a,b){return b.score-a.score})}
+function sendState(id){
+ if(!H.net)return;
+ var tm=H.teams[id];if(!tm)return;
+ var q=H.qs[H.qi],R=rank(),pos=R.indexOf(tm)+1;
+ var s={t:'st',phase:H.phase,qi:H.qi,n:H.qs.length,name:tm.name,av:tm.av,score:tm.score,rank:pos,of:R.length,lvl:H.lvlName,teacher:H.cfg.teacher,code:H.code};
+ if(H.phase==='q'){s.q=q.q;s.o=q.o;s.deadline=H.deadline;s.answered=H.ans[id]!=null;s.my=H.ans[id]?H.ans[id].a:null}
+ if(H.phase==='rev'){s.q=q.q;s.o=q.o;s.c=q.c;s.my=H.ans[id]?H.ans[id].a:null;s.gain=tm.last?tm.last.gain:0;s.e=q.e}
+ H.net.send(id,s);
+}
+function sendAll(){H.order.forEach(sendState)}
+
+/* ----- Soru ----- */
+var TIMER=null;
+function stopAll(){clearInterval(TIMER);TIMER=null;try{if(H&&H.net&&H.net.peer)H.net.peer.destroy()}catch(e){}}
+function nextQ(){
+ H.qi++;
+ if(H.qi>=H.qs.length)return finale();
+ H.phase='q';H.ans={};H.deadline=Date.now()+H.cfg.t*1000;
+ var q=H.qs[H.qi];
+ APP.className='game';
+ APP.innerHTML='<div class="qhead"><span class="qno">Soru '+(H.qi+1)+' / '+H.qs.length+'</span><span class="code-s">Oda: '+H.code+'</span><span class="ansn">Cevaplayan: <b id="ansN">0 / '+H.order.length+'</b></span></div>'+
+ '<div class="tbar"><i id="tb"></i></div><div class="qbody"><div class="qcard">'+card(q)+'</div><div class="qside"><h2 class="qq">'+esc(q.q)+'</h2><div class="opts">'+q.o.map(function(o,i){return '<div class="opt '+COLS[i]+'"><span class="sh">'+SHAPES[i]+'</span>'+esc(o)+'</div>'}).join('')+'</div>'+
+ (H.cfg.mode==='tek'?tekMarks():'')+'<div class="hctl"><span class="tleft" id="tl">'+H.cfg.t+'</span><button class="sm" id="skip">Süreyi bitir ⏭</button></div></div></div>';
+ $('skip').onclick=reveal;
+ if(H.cfg.mode==='tek')bindTek();
+ sendAll();
+ clearInterval(TIMER);TIMER=setInterval(function(){
+  var l=Math.max(0,(H.deadline-Date.now())/1000);
+  if($('tb'))$('tb').style.width=(l/H.cfg.t*100)+'%';
+  if($('tl'))$('tl').textContent=Math.ceil(l);
+  if(l<=5&&l>0)SFX.tick();
+  if(l<=0){clearInterval(TIMER);reveal()}
+ },250);
+}
+function pts(at){var rem=Math.max(0,(H.deadline-at)/1000);return 500+Math.round(500*rem/H.cfg.t)}
+function reveal(){
+ if(H.phase!=='q')return;
+ clearInterval(TIMER);H.phase='rev';
+ var q=H.qs[H.qi],dist=[0,0,0,0];
+ H.order.forEach(function(id){
+  var tm=H.teams[id],a=H.ans[id],g=0,ok=false;
+  if(a){dist[a.a]++;ok=a.a===q.c}
+  if(ok){tm.streak++;g=pts(a.at)+(tm.streak>=3?100:0)}else tm.streak=0;
+  tm.score+=g;tm.last={ok:ok,gain:g,a:a?a.a:null};tm.hist.push(ok);
+ });
+ SFX.good();
+ var mx=Math.max(1,Math.max.apply(null,dist));
+ $('tb')&&($('tb').style.width='0%');
+ qa('.opt').forEach(function(el,i){el.classList.add(i===q.c?'right':'dim');el.insertAdjacentHTML('beforeend','<span class="cnt">'+dist[i]+'</span>')});
+ var side=document.querySelector('.qside');
+ qa('.tekmarks,.hctl').forEach(function(x){x.remove()});
+ side.insertAdjacentHTML('beforeend','<div class="expl"><b>✅ Doğru cevap: '+SHAPES[q.c]+' '+esc(q.o[q.c])+'</b><p>'+esc(q.e)+'</p></div><div class="bars">'+q.o.map(function(o,i){return '<div class="barw"><i class="'+COLS[i]+'" style="height:'+(dist[i]/mx*100)+'%"></i><span>'+SHAPES[i]+'</span></div>'}).join('')+'</div><div class="hctl"><button class="go sm" id="toBoard">Sıralamayı göster ▶</button></div>');
+ $('toBoard').onclick=board;
+ sendAll();
+}
+function board(){
+ H.phase='board';
+ var R=rank();
+ APP.className='boardv';
+ APP.innerHTML='<h2>🏆 Sıralama · '+(H.qi+1)+'. sorudan sonra</h2><div class="lb">'+R.slice(0,8).map(function(t,i){return '<div class="lbr" style="animation-delay:'+(i*.08)+'s"><span class="pos">'+(i+1)+'</span><span class="av">'+t.av+'</span><b>'+esc(t.name)+'</b>'+(t.streak>=3?'<span class="fire">🔥'+t.streak+'</span>':'')+(t.last&&t.last.gain?'<span class="gain">+'+t.last.gain+'</span>':'')+'<span class="sc">'+t.score+'</span></div>'}).join('')+'</div><button class="go" id="nx">'+(H.qi+1>=H.qs.length?'Sonuçlar 🏁':'Sonraki soru ▶')+'</button>';
+ $('nx').onclick=nextQ;
+ sendAll();
+}
+
+/* ----- Tek ekran modu ----- */
+function tekLobby(){
+ APP.className='setup';
+ APP.innerHTML='<div class="panel"><button class="back" id="bk">← Geri</button><h2>🖥️ Tek ekran · Takımları ekle</h2><p class="muted">Takımlar cevaplarını sözlü ya da kartla söyler, sen tahtada işaretlersin.</p><div class="teams" id="tl2">'+H.order.map(function(id){var t=H.teams[id];return '<span class="tm">'+t.av+' '+esc(t.name)+' <button data-del="'+id+'" class="x">✕</button></span>'}).join('')+'</div><div class="addt"><input id="tnm" class="inp" maxlength="18" placeholder="Takım adı"><button id="tadd" class="sm">+ Ekle</button></div><button class="go" id="startQ" '+(H.order.length?'':'disabled')+'>Yarışmayı başlat ▶</button></div>';
+ $('bk').onclick=hostSetup;
+ var add=function(){var v=$('tnm').value.trim();if(!v)return;var id='t'+H.order.length+Math.random().toString(36).slice(2,5);H.teams[id]={id:id,name:v.slice(0,18),av:AV[H.order.length%AV.length],score:0,streak:0,last:null,hist:[]};H.order.push(id);tekLobby();$('tnm').focus()};
+ $('tadd').onclick=add;$('tnm').onkeydown=function(e){if(e.key==='Enter')add()};
+ qa('[data-del]').forEach(function(b){b.onclick=function(){var id=b.dataset.del;delete H.teams[id];H.order=H.order.filter(function(x){return x!==id});tekLobby()}});
+ $('startQ').onclick=function(){nextQ()};
+}
+function tekMarks(){
+ var q=H.qs[H.qi];
+ return '<div class="tekmarks">'+H.order.map(function(id){var t=H.teams[id];return '<div class="tkr"><span>'+t.av+' '+esc(t.name)+'</span>'+q.o.map(function(o,i){return '<button class="'+COLS[i]+'" data-tm="'+id+'" data-a="'+i+'">'+SHAPES[i]+'</button>'}).join('')+'</div>'}).join('')+'</div>';
+}
+function bindTek(){
+ qa('.tekmarks button').forEach(function(b){b.onclick=function(){var id=b.dataset.tm;if(H.phase!=='q')return;H.ans[id]={a:+b.dataset.a,at:Date.now()};qa('.tekmarks button[data-tm="'+id+'"]').forEach(function(x){x.classList.toggle('pick',x===b)});$('ansN').textContent=Object.keys(H.ans).length+' / '+H.order.length;if(Object.keys(H.ans).length>=H.order.length)setTimeout(reveal,500)}});
+}
+
+/* ----- Final ----- */
+function finale(){
+ H.phase='end';clearInterval(TIMER);
+ var R=rank();SFX.end();
+ APP.className='finale';
+ var pod=[R[1],R[0],R[2]];
+ APP.innerHTML='<h1>🏁 Yarışma bitti!</h1><div class="podium">'+pod.map(function(t,i){if(!t)return '<div class="pd empty"></div>';var p=[2,1,3][i];return '<div class="pd p'+p+'"><div class="pav">'+t.av+'</div><b>'+esc(t.name)+'</b><span>'+t.score+' puan</span><div class="pst">'+p+'</div></div>'}).join('')+'</div>'+
+ '<div class="lb small">'+R.slice(3).map(function(t,i){return '<div class="lbr"><span class="pos">'+(i+4)+'</span><span class="av">'+t.av+'</span><b>'+esc(t.name)+'</b><span class="sc">'+t.score+'</span></div>'}).join('')+'</div>'+
+ '<div class="fbtns"><button class="go" id="certAll">🎓 Tüm sertifikaları yazdır</button><button class="sm" id="again">🔁 Yeni yarışma</button><button class="sm" id="hm">🏠 Ana menü</button></div>';
+ confetti();
+ $('certAll').onclick=function(){printCerts(R.map(function(t,i){return {name:t.name,av:t.av,score:t.score,rank:i+1,of:R.length}}),H.lvlName,H.cfg.teacher)};
+ $('again').onclick=hostSetup;$('hm').onclick=home;
+ sendAll();
+}
+
+/* =============== SERTİFİKA =============== */
+function printCerts(list,lvl,teacher){
+ var d=new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+ var w=$('certs');
+ w.innerHTML=list.map(function(t){var title=t.rank===1?'Siber Kalkan Şampiyonu':t.rank<=3?'Siber Kalkan Ustası':'Siber Kalkan';return '<div class="cert"><div class="cbd"><div class="cseal">🛡️</div><div class="ctop">SİBER ARENA · DİJİTAL GÜVENLİK YARIŞMASI</div><h1>'+title+'</h1><p class="cfor">Bu sertifika</p><h2>'+t.av+' '+esc(t.name)+'</h2><p class="ctext">takımına, <b>'+esc(lvl)+'</b> seviyesindeki dijital güvenlik yarışmasında <b>'+t.score+' puan</b> alarak '+t.of+' takım arasında <b>'+t.rank+'.</b> olduğu için verilmiştir.</p><p class="cskills">Oltalamayı fark etme · Şifreni koruma · Doğrulama · Siber zorbalığa karşı durma</p><div class="csign"><div><span>'+esc(teacher||'')+'</span><small>Öğretmen</small></div><div><span>'+d+'</span><small>Tarih</small></div></div></div></div>'}).join('');
+ document.body.classList.add('printing');
+ setTimeout(function(){window.print();setTimeout(function(){document.body.classList.remove('printing')},500)},300);
+}
+
+/* =============== ÖĞRENCİ =============== */
+var C=null;
+function joinScreen(code){
+ stopAll();
+ var me=ls('sa-me')||{name:'',av:AV[Math.floor(Math.random()*AV.length)]};
+ var sid=null;try{sid=sessionStorage.getItem('sa-id');if(!sid){sid='p'+Math.random().toString(36).slice(2,10);sessionStorage.setItem('sa-id',sid)}}catch(e){sid='p'+Math.random().toString(36).slice(2,10)}
+ me.id=sid;
+ APP.className='join';
+ APP.innerHTML='<div class="panel narrow"><button class="back" id="bk">← Ana menü</button><h2>📱 Yarışmaya katıl</h2><div class="lbl">Oda kodu</div><input id="jc" class="inp codein" maxlength="5" value="'+esc(code)+'" placeholder="ABCDE" autocapitalize="characters"><div class="lbl">Takım adı</div><input id="jn" class="inp" maxlength="18" value="'+esc(me.name)+'" placeholder="Örn. Siber Kartallar"><div class="lbl">Takım simgesi</div><div class="avs" id="avs">'+AV.map(function(a){return '<button class="'+(a===me.av?'on':'')+'" data-a="'+a+'">'+a+'</button>'}).join('')+'</div><div id="jm"></div><button class="go" id="jg">Katıl ▶</button></div>';
+ $('bk').onclick=function(){history.replaceState(null,'',location.pathname+(LOCAL?'?yerel=1':''));home()};
+ qa('#avs button').forEach(function(b){b.onclick=function(){me.av=b.dataset.a;qa('#avs button').forEach(function(x){x.classList.toggle('on',x===b)})}});
+ $('jg').onclick=function(){
+  ac();var c=$('jc').value.trim().toUpperCase(),n=$('jn').value.trim();
+  if(c.length!==5){$('jm').innerHTML='<div class="err">Oda kodu 5 karakter olmalı.</div>';return}
+  if(!n){$('jm').innerHTML='<div class="err">Takım adını yaz.</div>';return}
+  me.name=n;ls('sa-me',me);
+  $('jg').disabled=true;$('jm').innerHTML='<div class="wait">⏳ Bağlanılıyor…</div>';
+  C={code:c,me:me,st:null};
+  C.net=new ClientNet(c,me.id,clientMsg,function(){C.net.send({t:'join',name:me.name,av:me.av})},function(err){if(C&&C.st&&C.st.phase==='end')return;APP.className='join';APP.innerHTML='<div class="panel narrow"><h2>😕 Bağlanılamadı</h2><div class="err">'+esc(err)+'</div><p class="muted">Okul ağı bağlantıyı engelliyor olabilir. Öğretmenin tek ekran moduna geçebilir.</p><button class="go" id="rt">Tekrar dene</button></div>';$('rt').onclick=function(){joinScreen(c)}});
+ };
+}
+function clientMsg(s){
+ if(s.t==='err'){APP.innerHTML='<div class="panel narrow"><div class="err">'+esc(s.m)+'</div></div>';return}
+ if(s.t!=='st')return;
+ var prev=C.st;C.st=s;
+ var head='<div class="chead"><span>'+s.av+' <b>'+esc(s.name)+'</b></span><span>'+s.score+' puan</span></div>';
+ APP.className='client';
+ if(s.phase==='lobby'||s.phase==='tekLobby'){APP.innerHTML=head+'<div class="cwait"><div class="big-ic">✅</div><h2>Katıldın!</h2><p>Öğretmen yarışmayı başlatınca sorular burada görünecek.</p><p class="muted">'+esc(s.lvl)+'</p></div>';return}
+ if(s.phase==='q'){
+  if(s.answered){APP.innerHTML=head+'<div class="cwait"><div class="big-ic">'+SHAPES[s.my]+'</div><h2>Cevabın alındı!</h2><p>Diğer takımlar bekleniyor…</p></div>';return}
+  APP.innerHTML=head+'<div class="cq"><small>Soru '+(s.qi+1)+' / '+s.n+'</small><h3>'+esc(s.q)+'</h3><div class="tbar"><i id="ctb"></i></div></div><div class="cops">'+s.o.map(function(o,i){return '<button class="cop '+COLS[i]+'" data-a="'+i+'"><span class="sh">'+SHAPES[i]+'</span>'+esc(o)+'</button>'}).join('')+'</div>';
+  qa('.cop').forEach(function(b){b.onclick=function(){if(navigator.vibrate)navigator.vibrate(30);C.net.send({t:'ans',qi:s.qi,a:+b.dataset.a});qa('.cop').forEach(function(x){x.disabled=true;x.classList.toggle('pick',x===b)})}});
+  var tot=Math.max(1,s.deadline-Date.now());
+  clearInterval(TIMER);TIMER=setInterval(function(){var el=$('ctb');if(!el)return clearInterval(TIMER);el.style.width=Math.max(0,(s.deadline-Date.now())/tot*100)+'%'},200);
+  return;
+ }
+ if(s.phase==='rev'){
+  var ok=s.my===s.c;if(prev&&prev.phase!=='rev')(ok?SFX.good:SFX.bad)();
+  APP.innerHTML=head+'<div class="cres '+(s.my==null?'none':ok?'ok':'no')+'"><div class="big-ic">'+(s.my==null?'⏰':ok?'🎉':'😕')+'</div><h2>'+(s.my==null?'Süre doldu':ok?'Doğru!':'Yanlış')+'</h2>'+(ok?'<div class="gain">+'+s.gain+'</div>':'')+'<p><b>Doğru cevap:</b> '+SHAPES[s.c]+' '+esc(s.o[s.c])+'</p><p class="ex">'+esc(s.e)+'</p><p class="muted">Sıran: '+s.rank+' / '+s.of+'</p></div>';
+  return;
+ }
+ if(s.phase==='board'){APP.innerHTML=head+'<div class="cwait"><div class="big-ic">🏆</div><h2>'+s.rank+'. sıradasın</h2><p>'+s.score+' puan · '+s.of+' takım</p><p class="muted">Tahtaya bak!</p></div>';return}
+ if(s.phase==='end'){
+  APP.innerHTML=head+'<div class="cwait"><div class="big-ic">'+(s.rank===1?'🥇':s.rank===2?'🥈':s.rank===3?'🥉':'🏁')+'</div><h2>Yarışma bitti!</h2><p><b>'+s.rank+'.</b> oldunuz · '+s.score+' puan</p><button class="go" id="myc">🎓 Sertifikamı göster</button></div>';
+  $('myc').onclick=function(){printCerts([{name:s.name,av:s.av,score:s.score,rank:s.rank,of:s.of}],s.lvl,s.teacher)};
+ }
+}
+
+/* =============== EDİTÖR =============== */
+var KINDS={sms:'💬 SMS',wa:'🟢 WhatsApp',dm:'📸 Sosyal medya mesajı',mail:'📧 E-posta',web:'🌐 Web sitesi',call:'📞 Telefon araması',durum:'📌 Durum'};
+function editor(si){
+ stopAll();
+ var S=sets();
+ if(si==null){
+  APP.className='setup';
+  APP.innerHTML='<div class="panel"><button class="back" id="bk">← Ana menü</button><h2>✏️ Kendi sorularını yaz</h2><p class="muted">Kendi senaryolarını yaz; yarışma kurarken “Kendi setin” olarak seçebilirsin. Öğrenciler de yazabilir: dolandırıcının gözünden düşünmek tuzakları fark etmeyi öğretir!</p>'+
+  '<div class="setl">'+(S.length?S.map(function(s,i){return '<div class="setr"><b>'+esc(s.name)+'</b><span class="muted">'+s.qs.length+' soru</span><button class="sm" data-e="'+i+'">Düzenle</button><button class="sm" data-x="'+i+'">Paylaş</button><button class="sm danger" data-d="'+i+'">Sil</button></div>'}).join(''):'<p class="muted">Henüz bir setin yok.</p>')+'</div>'+
+  '<div class="row2"><button class="go" id="ns">+ Yeni set</button><button class="sm" id="imp">📥 Paylaşım kodu ile içe aktar</button></div><div id="impbox"></div></div>';
+  $('bk').onclick=home;
+  $('ns').onclick=function(){S.push({name:'Yeni set '+(S.length+1),qs:[]});ls('sa-sets',S);editor(S.length-1)};
+  qa('[data-e]').forEach(function(b){b.onclick=function(){editor(+b.dataset.e)}});
+  qa('[data-d]').forEach(function(b){b.onclick=function(){var i=+b.dataset.d;if(b.dataset.sure){S.splice(i,1);ls('sa-sets',S);editor()}else{b.dataset.sure=1;b.textContent='Emin misin?'}}});
+  qa('[data-x]').forEach(function(b){b.onclick=function(){var code=btoa(unescape(encodeURIComponent(JSON.stringify(S[+b.dataset.x]))));$('impbox').innerHTML='<div class="lbl">Paylaşım kodu (kopyalayıp başka bilgisayarda içe aktar)</div><textarea class="inp" rows="4" readonly>'+esc(code)+'</textarea>';$('impbox').querySelector('textarea').select()}});
+  $('imp').onclick=function(){$('impbox').innerHTML='<div class="lbl">Paylaşım kodunu yapıştır</div><textarea class="inp" rows="4" id="ic"></textarea><button class="sm" id="icg">İçe aktar</button><div id="icm"></div>';$('icg').onclick=function(){try{var o=JSON.parse(decodeURIComponent(escape(atob($('ic').value.trim()))));if(!o||!Array.isArray(o.qs))throw 0;S.push({name:String(o.name||'İçe aktarılan set').slice(0,40),qs:o.qs.filter(validQ)});ls('sa-sets',S);editor()}catch(e){$('icm').innerHTML='<div class="err">Kod okunamadı.</div>'}}};
+  return;
+ }
+ var set=S[si];
+ APP.className='setup';
+ APP.innerHTML='<div class="panel wide"><button class="back" id="bk">← Setlerim</button><div class="lbl">Set adı</div><input id="sn" class="inp" maxlength="40" value="'+esc(set.name)+'">'+
+ '<div class="edgrid"><div class="edform"><h3 id="fh">Yeni soru</h3>'+
+ '<div class="lbl">Kart türü</div><select id="fk" class="inp">'+Object.keys(KINDS).map(function(k){return '<option value="'+k+'">'+KINDS[k]+'</option>'}).join('')+'</select>'+
+ '<div class="lbl">Gönderen / başlık</div><input id="ff" class="inp" maxlength="60" placeholder="Örn. KARGO, @hediye_dunyasi, Banka">'+
+ '<div class="lbl">Adres / numara <small class="muted">(e-posta ve web için)</small></div><input id="fa" class="inp" maxlength="80" placeholder="Örn. destek@banka-guvenlik.com, http://...">'+
+ '<div class="lbl">Mesaj <small class="muted">(**kalın** yazabilirsin)</small></div><textarea id="fm" class="inp" rows="3" maxlength="300"></textarea>'+
+ '<div class="lbl">Bağlantı <small class="muted">(isteğe bağlı)</small></div><input id="fu" class="inp" maxlength="80" placeholder="Örn. kargo-takip.info">'+
+ '<div class="lbl">Soru</div><input id="fq" class="inp" maxlength="120" placeholder="Örn. Bu mesaja ne yaparsın?">'+
+ '<div class="lbl">Seçenekler <small class="muted">(doğru olanı işaretle; en az 2)</small></div>'+[0,1,2,3].map(function(i){return '<div class="oprow"><span class="sh '+COLS[i]+'">'+SHAPES[i]+'</span><input id="fo'+i+'" class="inp" maxlength="90"><label><input type="radio" name="fc" value="'+i+'"'+(i===0?' checked':'')+'> doğru</label></div>'}).join('')+
+ '<div class="lbl">Açıklama <small class="muted">(cevaptan sonra gösterilir)</small></div><textarea id="fe" class="inp" rows="2" maxlength="250"></textarea><div id="fmg"></div><div class="row2"><button class="go sm" id="fs">Soruyu kaydet</button><button class="sm" id="fclr">Temizle</button></div></div>'+
+ '<div class="edprev"><div class="lbl">Önizleme</div><div id="pv" class="qcard"></div><div class="lbl" style="margin-top:14px">Sorular ('+set.qs.length+')</div><div class="qlist">'+(set.qs.length?set.qs.map(function(q,i){return '<div class="ql"><span>'+(i+1)+'. '+esc(q.q)+'</span><button class="sm" data-qe="'+i+'">Düzenle</button><button class="sm danger" data-qd="'+i+'">Sil</button></div>'}).join(''):'<p class="muted">Henüz soru yok.</p>')+'</div></div></div></div>';
+ var edit=null;
+ $('bk').onclick=function(){set.name=$('sn').value.trim()||set.name;ls('sa-sets',S);editor()};
+ $('sn').onchange=function(){set.name=this.value.trim()||set.name;ls('sa-sets',S)};
+ function read(){var o=[0,1,2,3].map(function(i){return $('fo'+i).value.trim()});var c=+(document.querySelector('input[name=fc]:checked')||{value:0}).value;var keep=o.map(function(x,i){return x?i:-1}).filter(function(i){return i>=0});
+  return {k:$('fk').value,f:$('ff').value.trim(),a:$('fa').value.trim(),m:$('fm').value.trim(),u:$('fu').value.trim(),q:$('fq').value.trim(),o:keep.map(function(i){return o[i]}),c:keep.indexOf(c),e:$('fe').value.trim()}}
+ function prev(){$('pv').innerHTML=card(read())}
+ qa('#fk,#ff,#fa,#fm,#fu').forEach(function(x){x.oninput=prev;x.onchange=prev});prev();
+ function fill(q){$('fk').value=q.k;$('ff').value=q.f||'';$('fa').value=q.a||'';$('fm').value=q.m||'';$('fu').value=q.u||'';$('fq').value=q.q||'';[0,1,2,3].forEach(function(i){$('fo'+i).value=q.o[i]||''});qa('input[name=fc]').forEach(function(r){r.checked=+r.value===q.c});$('fe').value=q.e||'';prev()}
+ $('fclr').onclick=function(){edit=null;$('fh').textContent='Yeni soru';fill({k:'sms',o:[],c:0})};
+ $('fs').onclick=function(){var q=read();
+  if(!q.m||!q.q){$('fmg').innerHTML='<div class="err">Mesaj ve soru boş olamaz.</div>';return}
+  if(q.o.length<2){$('fmg').innerHTML='<div class="err">En az iki seçenek yaz.</div>';return}
+  if(q.c<0){$('fmg').innerHTML='<div class="err">Doğru olarak işaretlediğin seçenek boş.</div>';return}
+  if(edit!=null)set.qs[edit]=q;else set.qs.push(q);set.name=$('sn').value.trim()||set.name;ls('sa-sets',S);editor(si)};
+ qa('[data-qe]').forEach(function(b){b.onclick=function(){edit=+b.dataset.qe;$('fh').textContent=(edit+1)+'. soruyu düzenle';fill(set.qs[edit])}});
+ qa('[data-qd]').forEach(function(b){b.onclick=function(){set.qs.splice(+b.dataset.qd,1);ls('sa-sets',S);editor(si)}});
+}
+function validQ(q){return q&&typeof q.q==='string'&&Array.isArray(q.o)&&q.o.length>=2&&q.c>=0&&q.c<q.o.length&&KINDS[q.k]}
+
+/* =============== KONFETİ =============== */
+function confetti(){
+ var cv=document.createElement('canvas');cv.className='conf';document.body.appendChild(cv);var x=cv.getContext('2d');cv.width=innerWidth;cv.height=innerHeight;
+ var C2=['#ff4d6d','#ffd23f','#3ddc97','#4d9de0','#b388ff','#fff'],P=[];for(var i=0;i<200;i++)P.push({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.6,vx:-2+Math.random()*4,vy:2+Math.random()*4,r:4+Math.random()*7,a:Math.random()*6,c:C2[i%C2.length]});
+ var t0=Date.now();(function f(){var t=Date.now()-t0;x.clearRect(0,0,cv.width,cv.height);P.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.vy+=.05;p.a+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillStyle=p.c;x.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);x.restore()});if(t<5000)requestAnimationFrame(f);else cv.remove()})();
+}
+
+window.addEventListener('beforeunload',function(e){if(H&&H.phase&&H.phase!=='end'&&H.phase!=='lobby'&&H.qi>=0){e.preventDefault();e.returnValue=''}});
+home();
+})();
+</script>
+</body></html>
