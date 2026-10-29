@@ -187,6 +187,17 @@ select.inp{appearance:auto}
  .row3{grid-template-columns:1fr}.panel{padding:18px 14px}
  .opts{grid-template-columns:1fr}.code{font-size:3.2rem}.pd{width:110px}.pd b{font-size:1rem}
 }
+#exitBtn{position:fixed;top:12px;right:12px;z-index:40;background:#e8384f;color:#fff;font-weight:800;border-radius:999px;padding:9px 16px;box-shadow:0 4px 0 #8f1630,0 6px 16px #0006;font-size:.95rem}
+#exitBtn:hover{background:#ff4d63}
+body:has(#app.home) #exitBtn{display:none}
+.dlgbg{position:fixed;inset:0;background:#0b0820cc;z-index:60;display:grid;place-items:center;padding:16px;animation:fade .15s}
+@keyframes fade{from{opacity:0}}
+.dlg{background:#fff;color:var(--ink);border-radius:22px;padding:22px 24px;max-width:400px;width:100%;text-align:center;animation:pop .25s}
+.dlg .big-ic{font-size:52px}.dlg p{color:#4a4570}
+.dlgb{display:flex;gap:10px;justify-content:center;margin-top:14px}.dlgb .sm{background:#e6e3f5;color:var(--ink)}.dlgb .exyes{background:#e8384f;color:#fff;box-shadow:0 4px 0 #8f1630}
+.qhead{padding-right:110px}.chead{margin-right:100px}
+@media print{#exitBtn,.dlgbg{display:none!important}}
+@media (max-width:860px){#exitBtn span{display:none}#exitBtn{padding:9px 13px}.qhead{padding-right:56px}.chead{margin-right:52px}}
 </style>
 </head>
 <body>
@@ -294,7 +305,7 @@ function HostNet(code,onMsg,onReady,onFail){
  if(LOCAL){
   var bc=new BroadcastChannel(PFX+code);
   bc.onmessage=function(e){var m=e.data;if(m.to!=='host')return;onMsg(m.from,m.d)};
-  self.send=function(to,d){bc.postMessage({to:to,from:'host',d:d})};
+  self.send=function(to,d){bc.postMessage({to:to,from:'host',d:d})};self.close=function(){try{bc.close()}catch(e){}};
   setTimeout(onReady,50);return;
  }
  if(!window.Peer){onFail('Bağlantı kütüphanesi yüklenemedi.');return}
@@ -305,14 +316,14 @@ function HostNet(code,onMsg,onReady,onFail){
   c.on('data',function(d){if(d&&d.from){self.conns[d.from]=c;onMsg(d.from,d.d)}});
  });
  self.send=function(to,d){var c=self.conns[to];if(c&&c.open)try{c.send({d:d})}catch(e){}};
- self.peer=peer;
+ self.peer=peer;self.close=function(){try{peer.destroy()}catch(e){}};
 }
 function ClientNet(code,me,onMsg,onOpen,onFail){
  var self=this;
  if(LOCAL){
   var bc=new BroadcastChannel(PFX+code);
   bc.onmessage=function(e){var m=e.data;if(m.to!==me)return;onMsg(m.d)};
-  self.send=function(d){bc.postMessage({to:'host',from:me,d:d})};
+  self.send=function(d){bc.postMessage({to:'host',from:me,d:d})};self.close=function(){try{bc.close()}catch(e){}};
   setTimeout(onOpen,50);return;
  }
  if(!window.Peer){onFail('Bağlantı kütüphanesi yüklenemedi.');return}
@@ -325,7 +336,7 @@ function ClientNet(code,me,onMsg,onOpen,onFail){
   setTimeout(function(){if(!opened)onFail('Oda bulunamadı. Kodu kontrol et.')},9000);
  });
  peer.on('error',function(e){onFail(e&&e.type==='peer-unavailable'?'Oda bulunamadı. Kodu kontrol et.':'Bağlantı kurulamadı ('+(e&&e.type||'hata')+').')});
- self.send=function(d){if(conn&&conn.open)conn.send({from:me,d:d})};
+ self.send=function(d){if(conn&&conn.open)conn.send({from:me,d:d})};self.close=function(){try{peer.destroy()}catch(e){}};
 }
 
 /* =============== ANA MENÜ =============== */
@@ -426,7 +437,7 @@ function sendAll(){H.order.forEach(sendState)}
 
 /* ----- Soru ----- */
 var TIMER=null;
-function stopAll(){clearInterval(TIMER);TIMER=null;try{if(H&&H.net&&H.net.peer)H.net.peer.destroy()}catch(e){}}
+function stopAll(){clearInterval(TIMER);TIMER=null;try{if(H&&H.net&&H.net.close)H.net.close()}catch(e){}}
 function nextQ(){
  H.qi++;
  if(H.qi>=H.qs.length)return finale();
@@ -537,10 +548,11 @@ function joinScreen(code){
   me.name=n;ls('sa-me',me);
   $('jg').disabled=true;$('jm').innerHTML='<div class="wait">⏳ Bağlanılıyor…</div>';
   C={code:c,me:me,st:null};
-  C.net=new ClientNet(c,me.id,clientMsg,function(){C.net.send({t:'join',name:me.name,av:me.av})},function(err){if(C&&C.st&&C.st.phase==='end')return;APP.className='join';APP.innerHTML='<div class="panel narrow"><h2>😕 Bağlanılamadı</h2><div class="err">'+esc(err)+'</div><p class="muted">Okul ağı bağlantıyı engelliyor olabilir. Öğretmenin tek ekran moduna geçebilir.</p><button class="go" id="rt">Tekrar dene</button></div>';$('rt').onclick=function(){joinScreen(c)}});
+  C.net=new ClientNet(c,me.id,clientMsg,function(){C.net.send({t:'join',name:me.name,av:me.av})},function(err){if(!C||C.leaving||(C.st&&C.st.phase==='end'))return;APP.className='join';APP.innerHTML='<div class="panel narrow"><h2>😕 Bağlanılamadı</h2><div class="err">'+esc(err)+'</div><p class="muted">Okul ağı bağlantıyı engelliyor olabilir. Öğretmenin tek ekran moduna geçebilir.</p><button class="go" id="rt">Tekrar dene</button></div>';$('rt').onclick=function(){joinScreen(c)}});
  };
 }
 function clientMsg(s){
+ if(!C||C.leaving)return;
  if(s.t==='err'){APP.innerHTML='<div class="panel narrow"><div class="err">'+esc(s.m)+'</div></div>';return}
  if(s.t!=='st')return;
  var prev=C.st;C.st=s;
@@ -625,6 +637,29 @@ function confetti(){
 }
 
 window.addEventListener('beforeunload',function(e){if(H&&H.phase&&H.phase!=='end'&&H.phase!=='lobby'&&H.qi>=0){e.preventDefault();e.returnValue=''}});
+/* =============== ÇIKIŞ =============== */
+function busy(){return (H&&H.phase&&H.phase!=='end')||(C&&C.st&&C.st.phase!=='end')}
+function doExit(){
+ clearInterval(TIMER);TIMER=null;
+ if(H){try{H.net&&H.net.close&&H.net.close()}catch(e){}H=null}
+ if(C){C.leaving=true;try{C.net&&C.net.close&&C.net.close()}catch(e){}C=null}
+ var d=$('exitDlg');if(d)d.remove();
+ history.replaceState(null,'',location.pathname+(LOCAL?'?yerel=1':''));
+ home();
+}
+function askExit(){
+ if($('exitDlg'))return;
+ if(!busy())return doExit();
+ var msg=H?'Yarışma kapanacak ve takımların bağlantısı kesilecek. Puanlar kaydedilmez.':'Yarışmadan ayrılacaksın. Takımının puanı tahtada kalır ama artık cevap veremezsin.';
+ var d=document.createElement('div');d.id='exitDlg';d.className='dlgbg';
+ d.innerHTML='<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="exT"><div class="big-ic">🚪</div><h2 id="exT">Oyundan çıkılsın mı?</h2><p>'+msg+'</p><div class="dlgb"><button class="sm" id="exNo">Devam et</button><button class="go sm exyes" id="exYes">Evet, çık</button></div></div>';
+ document.body.appendChild(d);
+ $('exNo').onclick=function(){d.remove()};$('exYes').onclick=doExit;
+ d.onclick=function(e){if(e.target===d)d.remove()};
+ $('exYes').focus();
+}
+(function(){var b=document.createElement('button');b.id='exitBtn';b.type='button';b.title='Oyundan çık (Esc)';b.innerHTML='✕ <span>Çıkış</span>';b.onclick=askExit;document.body.appendChild(b);
+ document.addEventListener('keydown',function(e){if(e.key==='Escape'){var d=$('exitDlg');if(d)d.remove();else if(APP.className!=='home')askExit()}});})();
 home();
 })();
 </script>
